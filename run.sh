@@ -25,6 +25,7 @@ docker build -f $DOCKERFILE \
 DOCKER_ARGS+=("--name $CONTAINER_NAME")
 DOCKER_ARGS+=("-v ./workspace:/home/ubuntu/workspace")
 DOCKER_ARGS+=("-p 6081:80")
+DOCKER_ARGS+=("-p 8765:8765")
 DOCKER_ARGS+=("--security-opt seccomp=unconfined")
 DOCKER_ARGS+=("--shm-size=512m")
 

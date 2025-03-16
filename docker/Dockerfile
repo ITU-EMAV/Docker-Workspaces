@@ -118,6 +118,11 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
     rm -rf /var/lib/apt/lists/*; \
     fi
 
+# Install foxglove bridge 
+RUN apt-get update -q && \
+    apt-get install -y \
+    ros-${ROS_DISTRO}-foxglove-bridge
+
 # Enable apt-get completion after running `apt-get update` in the container
 RUN rm /etc/apt/apt.conf.d/docker-clean
 

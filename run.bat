@@ -17,7 +17,6 @@ echo Building %DOCKERFILE% as image: %IMAGE_NAME%
 docker build -f %DOCKERFILE% -t %IMAGE_NAME% .
 
 rem Define Docker arguments
-set DOCKER_ARGS=--name %CONTAINER_NAME% -v %cd%/workspace:/home/ubuntu/workspace/ -p 6081:80 --security-opt seccomp=unconfined --shm-size=512m
-
+set DOCKER_ARGS=--name %CONTAINER_NAME% -v %cd%/workspace:/home/ubuntu/workspace/ -p 6081:80 --security-opt seccomp=unconfined --shm-size=512m  -p 8765:8765
 rem Run the container
 docker run -it --rm %DOCKER_ARGS% %IMAGE_NAME%
