@@ -15,8 +15,19 @@ git submodule update --init --recursive
 
 ## Run  
 After installing Docker, run the appropriate script for your operating system:  
+```
+cd Docker-Workspaces
+./run.sh
+```
 - Use [```run.bat```](run.bat) for Windows.  
-- Use [```run.sh```](run.sh) for Ubuntu or Mac.  
+- Use [```run.sh```](run.sh) for Ubuntu or Mac.
+
+If you can not connect to the repository
+```
+docker login -u my-user-name
+```
+Replace my-user-name with your username, and then it'll ask for password.
+Go back to Docker-Workspaces and do ./[```run.sh```](run.sh) or ./[```run.bat```](run.bat)
 
 ## Open Environment  
 1. Run the [```run.sh```](run.sh)/[```run.bat```](run.bat) script.  
