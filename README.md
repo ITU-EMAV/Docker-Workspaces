@@ -56,3 +56,10 @@ ros2 launch gazebo_environment sonoma.launch.py
 ![alt text](imgs/GazeboScreen.png)  
 
 The Gazebo environment should now open on your screen.  
+
+## Scripts
+
+### Launch Sonoma Environment in Gazebo
+```
+cd ~/workspace/ros2_ws/ && colcon build && source install/setup.bash && ros2 launch gazebo_environment sonoma.launch.py
+```
