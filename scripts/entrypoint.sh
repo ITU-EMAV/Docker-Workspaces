@@ -20,12 +20,13 @@ fi
 
 # VNC password
 VNC_PASSWORD=${PASSWORD:-ubuntu}
+NOVNC_PATH="${NOVNC_PATH:-/usr/share/novnc}"
 
 mkdir -p $HOME/.vnc
 echo $VNC_PASSWORD | vncpasswd -f > $HOME/.vnc/passwd
 chmod 600 $HOME/.vnc/passwd
 chown -R $USER:$USER $HOME
-sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" /usr/lib/novnc/app/ui.js
+sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" "$NOVNC_PATH/app/ui.js"
 
 # xstartup
 XSTARTUP_PATH=$HOME/.vnc/xstartup
@@ -69,7 +70,7 @@ user=root
 [program:vnc]
 command=gosu '$USER' bash '$VNCRUN_PATH'
 [program:novnc]
-command=gosu '$USER' bash -c "websockify --web=/usr/lib/novnc 80 localhost:5901"
+command=gosu '$USER' bash -c "websockify --web=$NOVNC_PATH 80 localhost:5901"
 EOF
 
 # colcon
