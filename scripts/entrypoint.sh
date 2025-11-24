@@ -21,6 +21,7 @@ fi
 # VNC password
 VNC_PASSWORD=${PASSWORD:-ubuntu}
 NOVNC_PATH="${NOVNC_PATH:-/usr/share/novnc}"
+ln -s /usr/share/novnc/vnc_auto.html /usr/share/novnc/index.html
 
 mkdir -p $HOME/.vnc
 echo $VNC_PASSWORD | vncpasswd -f > $HOME/.vnc/passwd
