@@ -115,11 +115,12 @@ RUN apt-get update -q && \
 RUN rosdep update
 
 # ---------------------------------------------------------
-# RQt tools
+# RQt tools and Tf
 # ---------------------------------------------------------
 RUN apt-get update -q && \
     apt-get install -y \
-        ros-${ROS_DISTRO}-rqt* 
+        ros-${ROS_DISTRO}-rqt* \
+        ros-${ROS_DISTRO}-tf* 
 
 # ---------------------------------------------------------
 # Gazebo Harmonic via ros-gz
