@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 CONTAINER_NAME="simulation-environment"
 IMAGE_NAME="simulation-environment-image"
@@ -23,11 +23,15 @@ docker build -f $DOCKERFILE \
 
 # DOCKER_ARGS+=("--network host")
 DOCKER_ARGS+=("--name $CONTAINER_NAME")
-DOCKER_ARGS+=("-v ./workspace:/home/ubuntu/workspace")
+DOCKER_ARGS+=("-v $(pwd)/workspace:/home/ubuntu/workspace")
 DOCKER_ARGS+=("-p 6081:80")
 DOCKER_ARGS+=("-p 8765:8765")
 DOCKER_ARGS+=("--security-opt seccomp=unconfined")
-DOCKER_ARGS+=("--shm-size=512m")
+DOCKER_ARGS+=("--shm-size=1g")
+DOCKER_ARGS+=("--device=/dev/dri:/dev/dri")
+DOCKER_ARGS+=("--device=/dev/dxg:/dev/dxg")
+
+
 
 
 

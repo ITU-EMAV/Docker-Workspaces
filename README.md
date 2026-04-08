@@ -63,3 +63,54 @@ The Gazebo environment should now open on your screen.
 ```
 cd ~/workspace/ros2_ws/ && colcon build && source install/setup.bash && ros2 launch gazebo_environment sonoma.launch.py
 ```
+
+## GPU access
+
+### Amd GPUS 
+```
+https://rocm.docs.amd.com/projects/radeon/en/latest/docs/install/wsl/install-radeon.html
+```
+
+Install amd driver
+```
+https://www.amd.com/en/resources/support-articles/release-notes/RN-RAD-WIN-25-3-1.html
+```
+
+#### Ubuntu 22.04
+```
+sudo apt update
+wget https://repo.radeon.com/amdgpu-install/6.3.4/ubuntu/jammy/amdgpu-install_6.3.60304-1_all.deb
+sudo apt install ./amdgpu-install_6.3.60304-1_all.deb
+```
+#### Ubuntu 24.04
+```
+```
+sudo apt update
+wget https://repo.radeon.com/amdgpu-install/6.3.4/ubuntu/noble/amdgpu-install_6.3.60304-1_all.deb
+sudo apt install ./amdgpu-install_6.3.60304-1_all.deb
+
+#### Native
+```
+amdgpu-install -y,rocm --no-dkms
+```
+
+#### Wsl
+```
+amdgpu-install -y --usecase=wsl,rocm --no-dkms
+```
+
+
+
+If simulation crash 
+```
+export LIBGL_ALWAYS_SOFTWARE=1
+```
+or run with ogre
+```
+ign gazebo  --render-engine ogre
+```
+#### Uninstall 
+```
+sudo amdgpu-uninstall
+```
+

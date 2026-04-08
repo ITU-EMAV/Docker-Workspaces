@@ -14,9 +14,16 @@ if defined runningContainer (
 
 echo Building %DOCKERFILE% as image: %IMAGE_NAME%
 
+
 docker build -f %DOCKERFILE% -t %IMAGE_NAME% .
 
 rem Define Docker arguments
-set DOCKER_ARGS=--name %CONTAINER_NAME% -v %cd%/workspace:/home/ubuntu/workspace/ -p 6081:80 --security-opt seccomp=unconfined --shm-size=512m  -p 8765:8765
+set DOCKER_ARGS=%DOCKER_ARGS% --name %CONTAINER_NAME%
+set DOCKER_ARGS=%DOCKER_ARGS% -v %cd%/workspace:/home/ubuntu/workspace/
+set DOCKER_ARGS=%DOCKER_ARGS% --security-opt
+set DOCKER_ARGS=%DOCKER_ARGS% seccomp=unconfined
+set DOCKER_ARGS=%DOCKER_ARGS% --shm-size=512m
+set DOCKER_ARGS=%DOCKER_ARGS% -p 6081:80
+
 rem Run the container
 docker run -it --rm %DOCKER_ARGS% %IMAGE_NAME%
