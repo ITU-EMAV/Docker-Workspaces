@@ -65,8 +65,9 @@ if [ "${GPU:-auto}" != "off" ]; then
         [ -z "$DRI_CARD" ] && DRI_CARD=$card
     done
     if [ -e /dev/dxg ]; then
-        # Gazebo (OGRE 2) aborts at random with "Out of GPU memory or driver refused"
-        # on Mesa d3d12, so it is only used when asked for with GPU=on.
+        # The Gazebo GUI (OGRE 2 over GLX) aborts at random with "Out of GPU memory or
+        # driver refused" on Mesa d3d12, so it is only used when asked for with GPU=on.
+        # sonoma.launch.py then keeps the GUI in software and the server on the GPU.
         if [ "$GPU" = "on" ]; then
             echo "* GPU: WSL2 /dev/dxg found, using Mesa d3d12 (experimental)"
             GPU_ENV="export GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"

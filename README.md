@@ -78,7 +78,7 @@ The container log prints which one was chosen (`* GPU: ...`).
 | Host | NVIDIA | AMD / Intel | What is needed |
 |---|---|---|---|
 | Ubuntu | yes | yes | NVIDIA: the proprietary driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker`). AMD/Intel: nothing extra. Use Docker Engine, not Docker Desktop for Linux, which runs containers in a VM without GPU access. |
-| Windows | experimental | experimental | Off by default; set `GPU=on` to try it. Needs Docker Desktop with the WSL 2 engine and an up-to-date GPU driver. OpenGL goes through DirectX (Mesa d3d12), but Gazebo aborts at random on it with `Out of GPU memory or driver refused` (seen on an AMD Radeon iGPU). |
+| Windows | experimental | experimental | Off by default; set `GPU=on` to try it. Needs Docker Desktop with the WSL 2 engine and an up-to-date GPU driver. OpenGL goes through DirectX (Mesa d3d12). The Gazebo GUI aborts at random on it (`Out of GPU memory or driver refused`, seen on an AMD Radeon iGPU), so `sonoma.launch.py` renders only the server (sensors) on the GPU and the GUI in software. A plain `gz sim` still renders both on the GPU. |
 | Mac | no | no | Docker Desktop for Mac has no GPU passthrough; software rendering only. |
 
 On Linux the desktop runs under [VirtualGL](https://virtualgl.org), so every OpenGL program (Gazebo, RViz) renders on the GPU.
