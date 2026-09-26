@@ -32,7 +32,7 @@ chown -R $USER:$USER $HOME/.vnc
 sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" "$NOVNC_PATH/app/ui.js"
 
 # GPU rendering (set GPU=off to force software rendering)
-#   /dev/dxg        Windows host (WSL2), any vendor  -> Mesa d3d12 driver
+#   /dev/dxg        Windows host (WSL2), any vendor  -> Mesa d3d12 driver, only with GPU=on
 #   /dev/nvidiactl  NVIDIA on Linux (--gpus all)     -> VirtualGL, EGL back end
 #   /dev/dri/card*  AMD/Intel on Linux (--device /dev/dri) -> VirtualGL on that card
 # Without any of these, OpenGL uses software rendering (llvmpipe).
@@ -65,10 +65,16 @@ if [ "${GPU:-auto}" != "off" ]; then
         [ -z "$DRI_CARD" ] && DRI_CARD=$card
     done
     if [ -e /dev/dxg ]; then
-        echo "* GPU: WSL2 /dev/dxg found, using Mesa d3d12"
-        GPU_ENV="export GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"
-        # Prefer the NVIDIA GPU on laptops that also have an integrated one
-        [ -e /usr/lib/wsl/lib/nvidia-smi ] && GPU_ENV="$GPU_ENV MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
+        # Gazebo (OGRE 2) aborts at random with "Out of GPU memory or driver refused"
+        # on Mesa d3d12, so it is only used when asked for with GPU=on.
+        if [ "$GPU" = "on" ]; then
+            echo "* GPU: WSL2 /dev/dxg found, using Mesa d3d12 (experimental)"
+            GPU_ENV="export GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"
+            # Prefer the NVIDIA GPU on laptops that also have an integrated one
+            [ -e /usr/lib/wsl/lib/nvidia-smi ] && GPU_ENV="$GPU_ENV MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
+        else
+            echo "* GPU: WSL2 /dev/dxg found but not used, set GPU=on to try it; using software rendering"
+        fi
     elif [ -e /dev/nvidiactl ]; then
         echo "* GPU: NVIDIA found, using VirtualGL (EGL)"
         SESSION_CMD="vglrun -d egl +wm mate-session"

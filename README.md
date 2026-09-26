@@ -30,7 +30,7 @@ Optional settings (environment variables read by the run scripts):
 |---|---|---|
 | `PASSWORD` | `ubuntu` | Password of the `ubuntu` user and of the VNC desktop |
 | `BIND_ADDR` | `127.0.0.1` | Only this computer can open the desktop. `0.0.0.0` opens it to your network, so anyone who can reach port 6081 gets the desktop (with sudo). |
-| `GPU` | `auto` | `off` forces software rendering. See [GPU](#gpu). |
+| `GPU` | `auto` | `off` forces software rendering, `on` also enables the experimental Windows GPU path. See [GPU](#gpu). |
 
 Example: `PASSWORD=secret ./run.sh` (Linux/Mac) or `set "PASSWORD=secret" && run.bat` (Windows).
 
@@ -77,7 +77,7 @@ The container log prints which one was chosen (`* GPU: ...`).
 | Host | NVIDIA | AMD / Intel | What is needed |
 |---|---|---|---|
 | Ubuntu | yes | yes | NVIDIA: the proprietary driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker`). AMD/Intel: nothing extra. Use Docker Engine, not Docker Desktop for Linux, which runs containers in a VM without GPU access. |
-| Windows | yes | yes | Docker Desktop with the WSL 2 engine and an up-to-date GPU driver. OpenGL goes through DirectX (Mesa d3d12), so every vendor works. |
+| Windows | experimental | experimental | Off by default; set `GPU=on` to try it. Needs Docker Desktop with the WSL 2 engine and an up-to-date GPU driver. OpenGL goes through DirectX (Mesa d3d12), but Gazebo aborts at random on it with `Out of GPU memory or driver refused` (seen on an AMD Radeon iGPU). |
 | Mac | no | no | Docker Desktop for Mac has no GPU passthrough; software rendering only. |
 
 On Linux the desktop runs under [VirtualGL](https://virtualgl.org), so every OpenGL program (Gazebo, RViz) renders on the GPU.

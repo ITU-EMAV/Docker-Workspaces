@@ -8,7 +8,8 @@ CONTAINER_USER="ubuntu"
 # Ports are only reachable from this computer. Set BIND_ADDR=0.0.0.0 to open
 # them to the network (anyone who can reach port 6081 gets the desktop).
 BIND_ADDR="${BIND_ADDR:-127.0.0.1}"
-# GPU=auto uses a GPU when one is found, GPU=off forces software rendering.
+# GPU=auto uses a GPU when one is found, GPU=off forces software rendering,
+# GPU=on also tries OpenGL through DirectX under WSL2 (experimental, Gazebo may crash).
 GPU="${GPU:-auto}"
 
 cd "$(dirname "$0")"
@@ -54,8 +55,9 @@ if [ "$GPU" != "off" ]; then
         DOCKER_ARGS+=("--gpus" "all")
     fi
     if [ -e /dev/dxg ]; then
-        # Inside WSL2 on Windows: any GPU vendor through DirectX
-        if gpu_works --device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl; then
+        # Inside WSL2 on Windows: any GPU vendor through DirectX. Only with GPU=on:
+        # Gazebo aborts at random with "Out of GPU memory" on Mesa d3d12.
+        if [ "$GPU" = "on" ] && gpu_works --device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl; then
             echo "GPU: WSL2 /dev/dxg"
             DOCKER_ARGS+=("--device" "/dev/dxg" "-v" "/usr/lib/wsl:/usr/lib/wsl")
         fi

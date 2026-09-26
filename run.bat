@@ -9,7 +9,8 @@ set CONTAINER_USER=ubuntu
 rem Ports are only reachable from this computer. Set BIND_ADDR=0.0.0.0 to open
 rem them to the network (anyone who can reach port 6081 gets the desktop).
 if not defined BIND_ADDR set BIND_ADDR=127.0.0.1
-rem GPU=auto uses a GPU when one is found, GPU=off forces software rendering.
+rem GPU=auto uses a GPU when one is found, GPU=off forces software rendering,
+rem GPU=on also tries OpenGL through DirectX (experimental, Gazebo may crash).
 if not defined GPU set GPU=auto
 
 cd /d "%~dp0"
@@ -33,11 +34,12 @@ if defined PASSWORD set DOCKER_ARGS=%DOCKER_ARGS% -e PASSWORD
 rem GPU passthrough (Docker Desktop with the WSL 2 engine). Each option is tried with a
 rem throwaway container first, so a missing driver falls back to software rendering.
 rem   --gpus all  NVIDIA (CUDA)
-rem   /dev/dxg    OpenGL on any GPU vendor (NVIDIA, AMD, Intel) through DirectX
+rem   /dev/dxg    OpenGL on any GPU vendor (NVIDIA, AMD, Intel) through DirectX. Only with
+rem               GPU=on: Gazebo aborts at random with "Out of GPU memory" on Mesa d3d12.
 set GPU_NVIDIA=
 set GPU_DXG=
 if /i not "%GPU%"=="off" docker run --rm --entrypoint true --gpus all %IMAGE_NAME% >nul 2>&1 && set "GPU_NVIDIA=--gpus all"
-if /i not "%GPU%"=="off" docker run --rm --entrypoint true --device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl %IMAGE_NAME% >nul 2>&1 && set "GPU_DXG=--device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl"
+if /i "%GPU%"=="on" docker run --rm --entrypoint true --device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl %IMAGE_NAME% >nul 2>&1 && set "GPU_DXG=--device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl"
 if defined GPU_NVIDIA echo GPU: NVIDIA
 if defined GPU_DXG echo GPU: WSL2 /dev/dxg
 
