@@ -42,6 +42,7 @@ DOCKER_ARGS+=("--security-opt" "seccomp=unconfined")
 DOCKER_ARGS+=("--shm-size=2g")
 DOCKER_ARGS+=("-e" "GPU=$GPU")
 [ -n "$PASSWORD" ] && DOCKER_ARGS+=("-e" "PASSWORD")
+[ -n "$LP_NUM_THREADS" ] && DOCKER_ARGS+=("-e" "LP_NUM_THREADS")
 
 # GPU passthrough. Each option is tried with a throwaway container first, so a
 # missing driver or toolkit falls back to software rendering instead of failing.

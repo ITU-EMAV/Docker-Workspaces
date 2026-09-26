@@ -30,6 +30,7 @@ Optional settings (environment variables read by the run scripts):
 |---|---|---|
 | `PASSWORD` | `ubuntu` | Password of the `ubuntu` user and of the VNC desktop |
 | `BIND_ADDR` | `127.0.0.1` | Only this computer can open the desktop. `0.0.0.0` opens it to your network, so anyone who can reach port 6081 gets the desktop (with sudo). |
+| `LP_NUM_THREADS` | `4` | CPU threads per OpenGL context in software rendering. Higher can be faster but can also make the whole computer unresponsive. |
 | `GPU` | `auto` | `off` forces software rendering, `on` also enables the experimental Windows GPU path. See [GPU](#gpu). |
 
 Example: `PASSWORD=secret ./run.sh` (Linux/Mac) or `set "PASSWORD=secret" && run.bat` (Windows).
@@ -87,6 +88,22 @@ To check, open a terminal in the desktop and run:
 /opt/VirtualGL/bin/glxinfo -B | grep "renderer string"
 ```
 It should name your GPU (for example `NVIDIA GeForce ...`, `AMD Radeon ...` or `D3D12 (...)`), not `llvmpipe`.
+
+## Windows: computer freezes while the simulation runs
+By default the WSL 2 VM behind Docker Desktop may use every CPU core and about half of the RAM, and it keeps file cache without giving it back to Windows.
+With software rendering Gazebo can then leave Windows without CPU or memory; stopping the container does not help, only quitting Docker Desktop does.
+Limit the VM with `%UserProfile%\.wslconfig` (Sonoma needs about 3 GB; tested on 16 GB RAM, 12 threads):
+```ini
+[wsl2]
+memory=6GB
+processors=8
+swap=4GB
+
+[experimental]
+autoMemoryReclaim=gradual
+```
+Then quit Docker Desktop, run `wsl --shutdown` and start Docker Desktop again.
+With less RAM or fewer cores, lower `memory` and `processors` (keep at least 2 cores and 4 GB for Windows).
 
 ## Scripts
 

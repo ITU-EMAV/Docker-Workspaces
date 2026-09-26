@@ -30,6 +30,7 @@ docker build -f %DOCKERFILE% -t %IMAGE_NAME% .
 rem Define Docker arguments. The gz-cache volume keeps downloaded Gazebo Fuel models between runs.
 set DOCKER_ARGS=--name %CONTAINER_NAME% -v "%cd%/workspace:/home/%CONTAINER_USER%/workspace" -v %CONTAINER_NAME%-gz-cache:/home/%CONTAINER_USER%/.gz -p %BIND_ADDR%:6081:80 -p %BIND_ADDR%:8765:8765 --security-opt seccomp=unconfined --shm-size=2g -e GPU=%GPU%
 if defined PASSWORD set DOCKER_ARGS=%DOCKER_ARGS% -e PASSWORD
+if defined LP_NUM_THREADS set DOCKER_ARGS=%DOCKER_ARGS% -e LP_NUM_THREADS
 
 rem GPU passthrough (Docker Desktop with the WSL 2 engine). Each option is tried with a
 rem throwaway container first, so a missing driver falls back to software rendering.

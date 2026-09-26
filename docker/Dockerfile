@@ -168,3 +168,6 @@ ENTRYPOINT ["/bin/bash", "-c", "/entrypoint.sh"]
 
 ENV USER ubuntu
 ENV PASSWORD ubuntu
+# Threads per OpenGL context for software rendering (llvmpipe). Gazebo opens several
+# contexts (GUI, camera, lidar) and each one would otherwise use every core.
+ENV LP_NUM_THREADS 4
