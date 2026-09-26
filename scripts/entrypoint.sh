@@ -14,7 +14,9 @@ if [ "$USER" != "root" ]; then
     HOME=/home/$USER
     echo "$USER:$PASSWORD" | /usr/sbin/chpasswd 2> /dev/null || echo ""
     cp -r /root/{.config,.gtkrc-2.0,.asoundrc} ${HOME} 2>/dev/null
-    chown -R $USER:$USER ${HOME}
+    # Skip the bind-mounted workspace (files on the host) and the Gazebo cache volume
+    find ${HOME} \( -path ${HOME}/workspace -o -path ${HOME}/.gz \) -prune -o -exec chown -h $USER:$USER {} +
+    [ -d ${HOME}/.gz ] && chown $USER:$USER ${HOME}/.gz
     [ -d "/dev/snd" ] && chgrp -R adm /dev/snd
 fi
 
@@ -26,15 +28,65 @@ ln -s /usr/share/novnc/vnc_auto.html /usr/share/novnc/index.html
 mkdir -p $HOME/.vnc
 echo $VNC_PASSWORD | vncpasswd -f > $HOME/.vnc/passwd
 chmod 600 $HOME/.vnc/passwd
-chown -R $USER:$USER $HOME
+chown -R $USER:$USER $HOME/.vnc
 sed -i "s/password = WebUtil.getConfigVar('password');/password = '$VNC_PASSWORD'/" "$NOVNC_PATH/app/ui.js"
+
+# GPU rendering (set GPU=off to force software rendering)
+#   /dev/dxg        Windows host (WSL2), any vendor  -> Mesa d3d12 driver
+#   /dev/nvidiactl  NVIDIA on Linux (--gpus all)     -> VirtualGL, EGL back end
+#   /dev/dri/card*  AMD/Intel on Linux (--device /dev/dri) -> VirtualGL on that card
+# Without any of these, OpenGL uses software rendering (llvmpipe).
+GPU_ENV=""
+SESSION_CMD="mate-session"
+if [ "${GPU:-auto}" != "off" ]; then
+    if [ "$USER" != "root" ]; then
+        # Give the user access to the GPU device nodes, whose group ids come from the host
+        for dev in /dev/dri/* /dev/dxg; do
+            [ -c "$dev" ] || continue
+            gid=$(stat -c %g "$dev")
+            [ "$gid" = "0" ] && continue
+            group=$(getent group "$gid" | cut -d: -f1)
+            if [ -z "$group" ]; then
+                group="hostgpu$gid"
+                groupadd -g "$gid" "$group"
+            fi
+            usermod -aG "$group" "$USER"
+        done
+    fi
+
+    # Pick a card that has a render node (skips display-only devices such as simpledrm)
+    DRI_CARD=""
+    for card in /dev/dri/card*; do
+        [ -c "$card" ] || continue
+        if ls /sys/class/drm/$(basename $card)/device/drm 2>/dev/null | grep -q renderD; then
+            DRI_CARD=$card
+            break
+        fi
+        [ -z "$DRI_CARD" ] && DRI_CARD=$card
+    done
+    if [ -e /dev/dxg ]; then
+        echo "* GPU: WSL2 /dev/dxg found, using Mesa d3d12"
+        GPU_ENV="export GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}"
+        # Prefer the NVIDIA GPU on laptops that also have an integrated one
+        [ -e /usr/lib/wsl/lib/nvidia-smi ] && GPU_ENV="$GPU_ENV MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
+    elif [ -e /dev/nvidiactl ]; then
+        echo "* GPU: NVIDIA found, using VirtualGL (EGL)"
+        SESSION_CMD="vglrun -d egl +wm mate-session"
+    elif [ -n "$DRI_CARD" ]; then
+        echo "* GPU: $DRI_CARD found, using VirtualGL"
+        SESSION_CMD="vglrun -d $DRI_CARD +wm mate-session"
+    else
+        echo "* GPU: none found, using software rendering"
+    fi
+fi
 
 # xstartup
 XSTARTUP_PATH=$HOME/.vnc/xstartup
 cat << EOF > $XSTARTUP_PATH
 #!/bin/sh
 unset DBUS_SESSION_BUS_ADDRESS
-mate-session
+$GPU_ENV
+$SESSION_CMD
 EOF
 chown $USER:$USER $XSTARTUP_PATH
 chmod 755 $XSTARTUP_PATH

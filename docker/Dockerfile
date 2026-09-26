@@ -44,6 +44,21 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------------------------------------------------------
+# VirtualGL: renders OpenGL apps in the VNC desktop on the host GPU
+# (NVIDIA, or AMD/Intel through /dev/dri). See scripts/entrypoint.sh.
+# ---------------------------------------------------------
+ARG VIRTUALGL_VERSION=3.1.5
+RUN wget -q -O /tmp/virtualgl.deb \
+      "https://github.com/VirtualGL/virtualgl/releases/download/${VIRTUALGL_VERSION}/virtualgl_${VIRTUALGL_VERSION}_$(dpkg --print-architecture).deb" && \
+    apt-get update -q && \
+    apt-get install -y /tmp/virtualgl.deb && \
+    rm -f /tmp/virtualgl.deb && \
+    rm -rf /var/lib/apt/lists/*
+
+# Let `--gpus all` mount the NVIDIA OpenGL/EGL libraries, not only CUDA.
+ENV NVIDIA_DRIVER_CAPABILITIES=all
+
+# ---------------------------------------------------------
 # noVNC + Websockify
 # ---------------------------------------------------------
 # RUN git clone https://github.com/AtsushiSaito/noVNC.git -b add_clipboard_support /usr/lib/novnc && \
@@ -152,4 +167,4 @@ RUN chmod +x /entrypoint.sh && dos2unix /entrypoint.sh
 ENTRYPOINT ["/bin/bash", "-c", "/entrypoint.sh"]
 
 ENV USER ubuntu
-ENV PASSWD ubuntu
+ENV PASSWORD ubuntu

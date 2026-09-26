@@ -1,0 +1,4 @@
+# Only scripts/entrypoint.sh is copied into the image; keep the build context small.
+.git
+workspace
+imgs
