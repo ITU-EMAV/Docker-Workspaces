@@ -20,4 +20,5 @@ BRIDGE_PID=$!
 trap 'kill $BRIDGE_PID 2>/dev/null' EXIT
 
 echo "* Starting the simulation. Open the address printed by run.sh / run.bat to watch it."
-ros2 launch gazebo_environment sonoma.launch.py gui:=false
+# SIM_LAUNCH_ARGS adds launch arguments, e.g. "ground_truth_tf:=false"
+ros2 launch gazebo_environment sonoma.launch.py gui:=false ${SIM_LAUNCH_ARGS}

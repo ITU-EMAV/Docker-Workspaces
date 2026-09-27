@@ -13,6 +13,8 @@ services:
     environment:
       - GPU=${GPU:-auto}
       - LP_NUM_THREADS=${LP_NUM_THREADS:-4}
+      # Extra arguments for sonoma.launch.py, e.g. "ground_truth_tf:=false"
+      - SIM_LAUNCH_ARGS=${SIM_LAUNCH_ARGS:-}
     volumes:
       - ./workspace/ros2_ws/src:/ws/src
       - build:/ws/build

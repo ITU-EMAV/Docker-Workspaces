@@ -51,6 +51,7 @@ Environment variables read by the run scripts:
 | `GPU` | `auto` | `off` forces software rendering. See [GPU](#gpu). |
 | `VIEWER_PORT` | `8090` | Port of the viewer page. 8080 is often taken by other software. |
 | `BIND_ADDR` | `127.0.0.1` | Only this computer can connect. `0.0.0.0` opens the viewer and the data stream to your network. |
+| `SIM_LAUNCH_ARGS` | | Extra arguments for `sonoma.launch.py`, e.g. `ground_truth_tf:=false` to leave `map -> odom -> base_footprint` to your own localization. |
 | `LP_NUM_THREADS` | `4` | CPU threads per OpenGL context in software rendering. |
 
 Example: `GPU=off ./run.sh` (Linux/Mac) or `set "GPU=off" && run.bat` (Windows).

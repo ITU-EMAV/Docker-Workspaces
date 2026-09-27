@@ -38,7 +38,7 @@
         "axisScale": 0.6
       },
       "topics": {
-        "/sac/sensors/front_3d_lidar/points": {
+        "/sac/sensors/roof_lidar/points": {
           "visible": true,
           "pointSize": 2,
           "colorField": "z",
