@@ -16,8 +16,14 @@ RUN apt-get update && \
         ros-jazzy-tf2-tools \
         libgl1-mesa-dri \
         libegl-mesa0 \
+        python3-pil \
+        python3-pip \
         gosu && \
     rm -rf /var/lib/apt/lists/*
+
+# trimesh converts the Sonoma track model to GLB for the browser viewer
+# (gazebo_environment's track_visual node); it is not packaged for Ubuntu.
+RUN pip3 install --no-cache-dir --break-system-packages trimesh==5.1.0
 
 # Let `--gpus all` mount the NVIDIA OpenGL/EGL libraries, not only CUDA.
 ENV NVIDIA_DRIVER_CAPABILITIES=all

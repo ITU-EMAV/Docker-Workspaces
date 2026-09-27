@@ -9,7 +9,10 @@ colcon build --symlink-install --event-handlers console_direct- summary+
 source /ws/install/setup.bash
 
 # Stop the bridge when the simulation exits (or on Ctrl+C / docker stop)
-ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 &
+# Without ROS_DISTRO the bridge does not announce the distro, and Lichtblick then does
+# not preload its built-in ROS Humble message definitions. Those clash with Jazzy's
+# NavSatFix and Marker, and the Map panel and the track model would stay empty.
+env -u ROS_DISTRO ros2 run foxglove_bridge foxglove_bridge --ros-args -p port:=8765 &
 BRIDGE_PID=$!
 trap 'kill $BRIDGE_PID 2>/dev/null' EXIT
 

@@ -29,4 +29,6 @@ echo   Open this address in Chrome or Firefox to watch the simulation:
 echo   http://localhost:%VIEWER_PORT%/?ds=foxglove-websocket^&ds.url=ws://localhost:8765
 echo   Press Ctrl+C here to stop it.
 echo.
-docker compose %FILES% up
+rem Fresh containers every time: the viewer only reads config/lichtblick-layout.json when
+rem its container is created. Volumes (build output, Gazebo models) are kept.
+docker compose %FILES% up --force-recreate

@@ -47,6 +47,9 @@
         },
         "/robot_description": {
           "visible": true
+        },
+        "/environment/track": {
+          "visible": true
         }
       },
       "layers": {

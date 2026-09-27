@@ -67,12 +67,19 @@ when none works. The log shows which one was chosen (`* GPU: ...`).
 | Ubuntu + AMD/Intel | Mesa EGL on `/dev/dri` | Nothing extra |
 | Mac | Software rendering | Docker Desktop for Mac has no GPU access |
 
-## Map
-The Sonoma world is placed at the real Sonoma Raceway, so the GPS topic
-`/sac/sensors/navsat/navsat` gives real coordinates that line up with maps (about 5 m).
+## What the viewer shows
+- **3D:** the car, the lidar point cloud and the textured Sonoma Raceway model
+  (`/environment/track`, converted from Gazebo's model the first time, a few seconds).
+- **Camera:** `/sac/sensors/front_camera/image`.
+- **Map:** the car on OpenStreetMap. The Sonoma world is placed at the real Sonoma
+  Raceway, so `/sac/sensors/navsat/navsat` gives real coordinates (about 5 m accuracy).
 
-Known issue: the Map panel shows the map around the car but does not draw the car's
-position yet (a Lichtblick problem that is being looked into). The 3D view is not affected.
+The layout lives in [`config/lichtblick-layout.json`](config/lichtblick-layout.json). Your
+browser keeps its own copy after the first visit; to get the file's version again, clear
+the site data for `localhost:8090` in the browser and reload.
+
+Sensors are only simulated while something subscribes to them, so a closed viewer or an
+unused topic costs nothing.
 
 ## Windows: computer freezes while the simulation runs
 By default the WSL 2 VM behind Docker Desktop may use every CPU core and about half of the RAM, and it keeps file cache without giving it back to Windows.
