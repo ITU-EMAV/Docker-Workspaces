@@ -22,6 +22,12 @@ RUN apt-get update && \
         gosu && \
     rm -rf /var/lib/apt/lists/*
 
+# Dependencies of the sac_autonomy packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ros-jazzy-foxglove-msgs && \
+    rm -rf /var/lib/apt/lists/*
+
 # trimesh converts the Sonoma track model to GLB for the browser viewer
 # (gazebo_environment's track_visual node); it is not packaged for Ubuntu.
 RUN pip3 install --no-cache-dir --break-system-packages trimesh==5.1.0

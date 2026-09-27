@@ -55,6 +55,20 @@
         "/environment/track": {
           "visible": true
         },
+        "/sac/planning/path": {
+          "visible": true,
+          "type": "line",
+          "lineWidth": 0.3,
+          "gradient": [
+            "#1e90ffff",
+            "#1e90ffff"
+          ]
+        },
+        "/sac/control/lookahead": {
+          "visible": true,
+          "pointSize": 12,
+          "color": "#ff8c00ff"
+        },
         "/sac/sensors/front_camera/points": {
           "visible": false,
           "pointSize": 1,
@@ -114,7 +128,9 @@
       "zoomLevel": 17,
       "followTopic": "/sac/sensors/navsat_front_right/navsat",
       "disabledTopics": [],
-      "topicColors": {},
+      "topicColors": {
+        "/sac/planning/route_geojson": "#1e90ff"
+      },
       "customTileUrl": "",
       "layer": "map"
     },
