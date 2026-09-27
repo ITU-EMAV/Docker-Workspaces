@@ -44,13 +44,25 @@
           "colorField": "z",
           "colorMode": "colormap",
           "colorMap": "turbo",
-          "decayTime": 3
+          "decayTime": 3,
+          "explicitAlpha": 1,
+          "minValue": -2.0,
+          "maxValue": 1.0
         },
         "/robot_description": {
           "visible": true
         },
         "/environment/track": {
           "visible": true
+        },
+        "/sac/sensors/front_camera/points": {
+          "visible": false,
+          "pointSize": 1,
+          "colorField": "z",
+          "colorMode": "colormap",
+          "colorMap": "turbo",
+          "minValue": 0.0,
+          "maxValue": 20.0
         }
       },
       "layers": {
