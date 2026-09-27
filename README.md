@@ -10,7 +10,7 @@ For the VNC desktop version, use the `simulation-environment` branch.
 
 ## Clone Repository
 ```bash
-git clone https://github.com/ITU-EMAV/Docker-Workspaces.git -b simulation-environment-headless --recursive
+git clone https://github.com/ITU-EMAV/Docker-Workspaces.git --recursive
 ```
 
 To update submodules recursively:
