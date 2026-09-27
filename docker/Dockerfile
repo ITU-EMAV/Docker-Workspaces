@@ -161,6 +161,23 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages \
 # Entry point
 # ---------------------------------------------------------
 RUN rm -f /etc/apt/apt.conf.d/docker-clean || true
+
+# Desktop programs that are useless in a container and cost CPU in the VNC session:
+# update checks (list-oem-metapackages kept a core busy for minutes after login),
+# the picom compositor, the screensaver/lock, and backup, mail, bluetooth, printer,
+# power, network and accessibility helpers.
+RUN cd /etc/xdg/autostart && rm -f \
+      update-notifier.desktop ubuntu-advantage-notification.desktop ubuntu-report-on-upgrade.desktop \
+      picom.desktop mate-screensaver.desktop mate-power-manager.desktop mate-optimus.desktop \
+      org.gnome.DejaDup.Monitor.desktop org.gnome.Evolution-alarm-notify.desktop \
+      blueman.desktop nm-applet.desktop print-applet.desktop snap-userd-autostart.desktop \
+      geoclue-demo-agent.desktop spice-vdagent.desktop orca-autostart.desktop \
+      onboard-autostart.desktop magnus-autostart.desktop && \
+    rm -f /usr/share/mate/autostart/nm-applet.desktop && \
+    printf '[org.mate.screensaver]\nidle-activation-enabled=false\nlock-enabled=false\n' \
+      > /usr/share/glib-2.0/schemas/90-container.gschema.override && \
+    glib-compile-schemas /usr/share/glib-2.0/schemas
+
 COPY ./scripts/entrypoint.sh /
 RUN chmod +x /entrypoint.sh && dos2unix /entrypoint.sh
 
