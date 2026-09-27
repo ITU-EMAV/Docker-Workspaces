@@ -112,11 +112,31 @@
         "lon": -122.4548
       },
       "zoomLevel": 17,
-      "followTopic": "/sac/sensors/navsat/navsat",
+      "followTopic": "/sac/sensors/navsat_front_right/navsat",
       "disabledTopics": [],
       "topicColors": {},
       "customTileUrl": "",
       "layer": "map"
+    },
+    "Teleop!simteleop": {
+      "topic": "/sac/teleop/pad",
+      "publishRate": 20,
+      "upButton": {
+        "field": "linear-x",
+        "value": 1
+      },
+      "downButton": {
+        "field": "linear-x",
+        "value": -1
+      },
+      "leftButton": {
+        "field": "angular-z",
+        "value": 1
+      },
+      "rightButton": {
+        "field": "angular-z",
+        "value": -1
+      }
     }
   },
   "globalVariables": {},
@@ -128,7 +148,12 @@
     "first": "3D!sim3d",
     "second": {
       "first": "Image!simcam",
-      "second": "map!simmap",
+      "second": {
+        "first": "map!simmap",
+        "second": "Teleop!simteleop",
+        "direction": "row",
+        "splitPercentage": 60
+      },
       "direction": "column",
       "splitPercentage": 50
     },

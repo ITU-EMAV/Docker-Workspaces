@@ -68,12 +68,21 @@ when none works. The log shows which one was chosen (`* GPU: ...`).
 | Ubuntu + AMD/Intel | Mesa EGL on `/dev/dri` | Nothing extra |
 | Mac | Software rendering | Docker Desktop for Mac has no GPU access |
 
+## Driving from the browser
+The Teleop panel (bottom right) drives the car like a cruise control:
+- hold **up** / **down** to raise / lower the target speed; it stays when you let go.
+  Holding down stops the car at 0; press down again to reverse.
+- hold **left** / **right** to turn at the current speed.
+
+It only sends commands while you use it or the car is moving on its set speed, so your own
+code can drive `/sac/actuators/cmd_vel` otherwise.
+
 ## What the viewer shows
 - **3D:** the car, the lidar point cloud and the textured Sonoma Raceway model
   (`/environment/track`, converted from Gazebo's model the first time, a few seconds).
 - **Camera:** `/sac/sensors/front_camera/image`.
 - **Map:** the car on OpenStreetMap. The Sonoma world is placed at the real Sonoma
-  Raceway, so `/sac/sensors/navsat/navsat` gives real coordinates (about 5 m accuracy).
+  Raceway, so the GNSS topics (`/sac/sensors/navsat_front_right/navsat`, `.../navsat_rear_left/navsat`) give real coordinates (about 5 m accuracy).
 
 The layout lives in [`config/lichtblick-layout.json`](config/lichtblick-layout.json). Your
 browser keeps its own copy after the first visit; to get the file's version again, clear
