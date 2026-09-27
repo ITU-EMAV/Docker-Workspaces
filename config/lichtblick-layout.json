@@ -1,0 +1,122 @@
+{
+  "configById": {
+    "3D!sim3d": {
+      "cameraState": {
+        "distance": 30,
+        "perspective": true,
+        "phi": 60,
+        "thetaOffset": 45,
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "followTf": "base_footprint",
+      "scene": {
+        "enableStats": false,
+        "backgroundColor": "#1e2127"
+      },
+      "transforms": {
+        "labelSize": 0.3,
+        "axisScale": 0.6
+      },
+      "topics": {
+        "/sac/sensors/front_3d_lidar/points": {
+          "visible": true,
+          "pointSize": 2,
+          "colorField": "z",
+          "colorMode": "colormap",
+          "colorMap": "turbo",
+          "decayTime": 3
+        },
+        "/robot_description": {
+          "visible": true
+        }
+      },
+      "layers": {
+        "grid": {
+          "visible": true,
+          "layerId": "foxglove.Grid",
+          "frameId": "base_footprint",
+          "size": 100,
+          "divisions": 50,
+          "lineWidth": 1,
+          "color": "#248eff40",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "order": 1
+        }
+      },
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose"
+      },
+      "imageMode": {}
+    },
+    "Image!simcam": {
+      "imageMode": {
+        "imageTopic": "/sac/sensors/front_camera/image"
+      },
+      "cameraState": {},
+      "topics": {},
+      "layers": {},
+      "transforms": {},
+      "publish": {},
+      "scene": {}
+    },
+    "map!simmap": {
+      "center": {
+        "lat": 38.1616,
+        "lon": -122.4548
+      },
+      "zoomLevel": 17,
+      "followTopic": "/sac/sensors/navsat/navsat",
+      "disabledTopics": [],
+      "topicColors": {},
+      "customTileUrl": "",
+      "layer": "map"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": "3D!sim3d",
+    "second": {
+      "first": "Image!simcam",
+      "second": "map!simmap",
+      "direction": "column",
+      "splitPercentage": 50
+    },
+    "direction": "row",
+    "splitPercentage": 62
+  }
+}

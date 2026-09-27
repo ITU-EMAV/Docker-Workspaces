@@ -1,0 +1,42 @@
+# Headless simulation: `sim` runs Gazebo without a window plus foxglove_bridge,
+# `viewer` serves Lichtblick (open-source Foxglove) at http://localhost:8090.
+# Start it with run.sh / run.bat, which also add the GPU file that fits the host.
+name: simulation-headless
+
+services:
+  sim:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: simulation-headless
+    container_name: simulation-headless
+    environment:
+      - GPU=${GPU:-auto}
+      - LP_NUM_THREADS=${LP_NUM_THREADS:-4}
+    volumes:
+      - ./workspace/ros2_ws/src:/ws/src
+      - build:/ws/build
+      - install:/ws/install
+      - log:/ws/log
+      # Downloaded Gazebo Fuel models (Sonoma Raceway) survive restarts
+      - gz-cache:/home/ubuntu/.gz
+    ports:
+      # Only this computer can connect unless BIND_ADDR=0.0.0.0
+      - ${BIND_ADDR:-127.0.0.1}:8765:8765
+    shm_size: 2gb
+    init: true
+
+  viewer:
+    image: ghcr.io/lichtblick-suite/lichtblick:1.29.1
+    container_name: simulation-headless-viewer
+    volumes:
+      - ./config/lichtblick-layout.json:/lichtblick/default-layout.json:ro
+    ports:
+      # 8080 is often taken (e.g. by National Instruments software), so 8090 by default
+      - ${BIND_ADDR:-127.0.0.1}:${VIEWER_PORT:-8090}:8080
+
+volumes:
+  build:
+  install:
+  log:
+  gz-cache:

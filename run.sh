@@ -1,79 +1,40 @@
-#! /bin/bash
-
-CONTAINER_NAME="simulation-environment"
-IMAGE_NAME="simulation-environment-image"
-DOCKERFILE="docker/Dockerfile"
-CONTAINER_USER="ubuntu"
-
-# Ports are only reachable from this computer. Set BIND_ADDR=0.0.0.0 to open
-# them to the network (anyone who can reach port 6081 gets the desktop).
-BIND_ADDR="${BIND_ADDR:-127.0.0.1}"
-# GPU=auto uses a GPU when one is found, GPU=off forces software rendering,
-# GPU=on also tries OpenGL through DirectX under WSL2 (experimental, Gazebo may crash).
-GPU="${GPU:-auto}"
-
+#!/bin/bash
+# Starts the headless simulation (Linux, Mac, or inside WSL 2).
+# Running it again while the simulation is up opens a terminal in it.
+#   GPU=auto (default) uses a GPU when one is found, GPU=off forces software rendering.
+#   BIND_ADDR=0.0.0.0 makes the viewer reachable from other computers.
+#   VIEWER_PORT=8090 (default) is the port of the viewer page.
+set -e
 cd "$(dirname "$0")"
+export GPU="${GPU:-auto}"
 
-
-if [ "$(docker ps -a --quiet --filter status=running --filter name=$CONTAINER_NAME)" ]; then
-    echo "Attaching to running container: $CONTAINER_NAME"
-    docker exec -i -t -u $CONTAINER_USER -w /home/$CONTAINER_USER/workspace $CONTAINER_NAME /bin/bash
-    exit 0
+if [ -n "$(docker ps --quiet --filter status=running --filter name=^simulation-headless$)" ]; then
+    echo "Opening a terminal in the running simulation"
+    exec docker exec -it -u ubuntu simulation-headless bash
 fi
 
+docker compose build sim
 
-echo "Building ${DOCKERFILE} as image: ${IMAGE_NAME}"
-
-
-docker build -f $DOCKERFILE \
-    -t $IMAGE_NAME \
-    .
-
-
-
-# DOCKER_ARGS+=("--network" "host")
-DOCKER_ARGS+=("--name" "$CONTAINER_NAME")
-DOCKER_ARGS+=("-v" "$(pwd)/workspace:/home/$CONTAINER_USER/workspace")
-# Keeps downloaded Gazebo Fuel models (e.g. Sonoma Raceway) between runs
-DOCKER_ARGS+=("-v" "$CONTAINER_NAME-gz-cache:/home/$CONTAINER_USER/.gz")
-DOCKER_ARGS+=("-p" "$BIND_ADDR:6081:80")
-DOCKER_ARGS+=("-p" "$BIND_ADDR:8765:8765")
-DOCKER_ARGS+=("--security-opt" "seccomp=unconfined")
-DOCKER_ARGS+=("--shm-size=2g")
-DOCKER_ARGS+=("-e" "GPU=$GPU")
-[ -n "$PASSWORD" ] && DOCKER_ARGS+=("-e" "PASSWORD")
-[ -n "$LP_NUM_THREADS" ] && DOCKER_ARGS+=("-e" "LP_NUM_THREADS")
-
-# GPU passthrough. Each option is tried with a throwaway container first, so a
-# missing driver or toolkit falls back to software rendering instead of failing.
+# Each GPU option is tried with a throwaway container first, so a missing
+# driver or toolkit falls back to software rendering instead of failing.
 gpu_works() {
-    docker run --rm --entrypoint true "$@" $IMAGE_NAME > /dev/null 2>&1
+    docker run --rm --entrypoint true "$@" simulation-headless > /dev/null 2>&1
 }
+FILES=(-f compose.yaml)
 if [ "$GPU" != "off" ]; then
-    # NVIDIA: needs the NVIDIA Container Toolkit on Linux
-    if command -v nvidia-smi > /dev/null && gpu_works --gpus all; then
-        echo "GPU: NVIDIA"
-        DOCKER_ARGS+=("--gpus" "all")
-    fi
     if [ -e /dev/dxg ]; then
-        # Inside WSL2 on Windows: any GPU vendor through DirectX. Only with GPU=on:
-        # Gazebo aborts at random with "Out of GPU memory" on Mesa d3d12.
-        if [ "$GPU" = "on" ] && gpu_works --device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl; then
-            echo "GPU: WSL2 /dev/dxg"
-            DOCKER_ARGS+=("--device" "/dev/dxg" "-v" "/usr/lib/wsl:/usr/lib/wsl")
-        fi
-    elif [ -d /dev/dri ]; then
-        # AMD and Intel on Linux
-        if gpu_works --device /dev/dri; then
-            echo "GPU: /dev/dri"
-            DOCKER_ARGS+=("--device" "/dev/dri")
-        fi
+        # Inside WSL 2 on Windows: any GPU vendor through DirectX
+        gpu_works --device /dev/dxg -v /usr/lib/wsl:/usr/lib/wsl && FILES+=(-f compose.gpu-wsl.yaml)
+    elif command -v nvidia-smi > /dev/null && gpu_works --gpus all; then
+        FILES+=(-f compose.gpu-nvidia.yaml)
+    elif ls /dev/dri/renderD* > /dev/null 2>&1 && gpu_works --device /dev/dri; then
+        FILES+=(-f compose.gpu-dri.yaml)
     fi
 fi
 
-
-
-
-docker run -it --rm \
-    "${DOCKER_ARGS[@]}" \
-    $IMAGE_NAME
+echo
+echo "  Open this address in Chrome or Firefox to watch the simulation:"
+echo "  http://localhost:${VIEWER_PORT:-8090}/?ds=foxglove-websocket&ds.url=ws://localhost:8765"
+echo "  Press Ctrl+C here to stop it."
+echo
+docker compose "${FILES[@]}" up

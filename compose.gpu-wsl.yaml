@@ -1,0 +1,7 @@
+# Windows (Docker Desktop, WSL 2 engine): any GPU vendor through DirectX (Mesa d3d12).
+services:
+  sim:
+    devices:
+      - /dev/dxg
+    volumes:
+      - /usr/lib/wsl:/usr/lib/wsl:ro

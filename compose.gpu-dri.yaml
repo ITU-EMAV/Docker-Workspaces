@@ -1,0 +1,5 @@
+# Linux with an AMD or Intel GPU (Mesa drivers).
+services:
+  sim:
+    devices:
+      - /dev/dri

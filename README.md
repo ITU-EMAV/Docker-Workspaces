@@ -1,98 +1,82 @@
+# Docker-Workspaces
+Headless Simulation Environment
 
-# Docker-Workspaces  
-Simulation Environment  
+Gazebo runs without a window inside Docker, and you watch the car in your browser
+(3D view, camera, lidar, map) through [Lichtblick](https://github.com/lichtblick-suite/lichtblick),
+the open-source version of Foxglove. There is no remote desktop (VNC), so it starts
+faster, uses less CPU, and the viewer draws on your own computer's GPU.
 
-## Clone Repository  
-Clone the repository with submodules using this command:  
+For the VNC desktop version, use the `simulation-environment` branch.
+
+## Clone Repository
 ```bash
-git clone https://github.com/ITU-EMAV/Docker-Workspaces.git -b simulation-environment --recursive
+git clone https://github.com/ITU-EMAV/Docker-Workspaces.git -b simulation-environment-headless --recursive
 ```
 
-To update submodules recursively:  
+To update submodules recursively:
 ```bash
 git submodule update --init --recursive
-```  
-
-## Run  
-After installing Docker, run the appropriate script for your operating system:  
 ```
-cd Docker-Workspaces
-./run.sh
+
+## Run
+Install Docker, then run the script for your operating system:
+- Windows: [`run.bat`](run.bat)
+- Ubuntu or Mac: [`run.sh`](run.sh)
+
+The first run builds the image and downloads the Sonoma Raceway model, which takes a
+few minutes. When the log shows `Starting the simulation`, open this address in Chrome or Firefox:
+
+**http://localhost:8090/?ds=foxglove-websocket&ds.url=ws://localhost:8765**
+
+The viewer connects to the simulation and opens the default layout: 3D view, front
+camera and map. (The script prints the same address.)
+
+If the page shows no data, click **Open connection** and connect to `ws://localhost:8765`.
+
+Press `Ctrl+C` in the script's window to stop everything. Running the script again while
+the simulation is up opens a terminal in it, with ROS and the workspace already sourced:
+```bash
+ros2 topic list
+ros2 topic pub /sac/actuators/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0}}"
 ```
-- Use [```run.bat```](run.bat) for Windows.  
-- Use [```run.sh```](run.sh) for Ubuntu or Mac.
 
-Running the script again while the container is up opens a terminal in it as the `ubuntu` user.
+The workspace in `workspace/ros2_ws/src` is built when the container starts; its build
+output is kept in Docker volumes, not in your folder.
 
-Optional settings (environment variables read by the run scripts):
+### Options
+Environment variables read by the run scripts:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `PASSWORD` | `ubuntu` | Password of the `ubuntu` user and of the VNC desktop |
-| `BIND_ADDR` | `127.0.0.1` | Only this computer can open the desktop. `0.0.0.0` opens it to your network, so anyone who can reach port 6081 gets the desktop (with sudo). |
-| `LP_NUM_THREADS` | `4` | CPU threads per OpenGL context in software rendering. Higher can be faster but can also make the whole computer unresponsive. |
-| `GPU` | `auto` | `off` forces software rendering, `on` also enables the experimental Windows GPU path. See [GPU](#gpu). |
+| `GPU` | `auto` | `off` forces software rendering. See [GPU](#gpu). |
+| `VIEWER_PORT` | `8090` | Port of the viewer page. 8080 is often taken by other software. |
+| `BIND_ADDR` | `127.0.0.1` | Only this computer can connect. `0.0.0.0` opens the viewer and the data stream to your network. |
+| `LP_NUM_THREADS` | `4` | CPU threads per OpenGL context in software rendering. |
 
-Example: `PASSWORD=secret ./run.sh` (Linux/Mac) or `set "PASSWORD=secret" && run.bat` (Windows).
-
-If you can not connect to the repository
-```
-docker login -u my-user-name
-```
-Replace my-user-name with your username, and then it'll ask for password.
-Go back to Docker-Workspaces and do ./[```run.sh```](run.sh) or ./[```run.bat```](run.bat)
-
-## Open Environment  
-1. Run the [```run.sh```](run.sh)/[```run.bat```](run.bat) script.  
-2. Open **Google Chrome**.  
-3. Type `localhost:6081` in the address bar and click **Connect**.  
-    ![StartScreen](imgs/StartScreen.png)  
-4. You are now in a virtual environment for developing ROS and Gazebo projects.  
-    ![DesktopScreen](imgs/DesktopScreen.png)  
-5. In **Ubuntu's Home** folder, there is a `workspace` directory containing `ros2_ws` and `gazebo_environment`.  
-    ![alt text](imgs/WorkspaceScreen.png)  
-6. Open a terminal inside the `ros2_ws` folder.  
-    ![alt text](imgs/OpenTerminalScreen.png)  
-7. Run the following commands in the terminal:  
-    ```bash
-    colcon build
-    source install/setup.bash
-    ```
-    ![alt text](imgs/TypeCommandScreen.png)  
-8. Your environment is now ready.  
-
-## Test the Environment  
-In the same terminal, type:  
-```bash
-ros2 launch gazebo_environment sonoma.launch.py
-```
-![alt text](imgs/GazeboScreen.png)  
-
-The Gazebo environment should now open on your screen.  
+Example: `GPU=off ./run.sh` (Linux/Mac) or `set "GPU=off" && run.bat` (Windows).
 
 ## GPU
-Without a GPU everything is rendered on the CPU, which is slow for Gazebo's cameras and lidars.
-The run scripts look for a GPU and use it when the checks below pass; otherwise they fall back to software rendering.
-The container log prints which one was chosen (`* GPU: ...`).
+Only the sensors (camera, lidar) are rendered in the container, off-screen; the viewer
+draws in your browser. The run scripts find a GPU and fall back to software rendering
+when none works. The log shows which one was chosen (`* GPU: ...`).
 
-| Host | NVIDIA | AMD / Intel | What is needed |
-|---|---|---|---|
-| Ubuntu | yes | yes | NVIDIA: the proprietary driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker`). AMD/Intel: nothing extra. Use Docker Engine, not Docker Desktop for Linux, which runs containers in a VM without GPU access. |
-| Windows | experimental | experimental | Off by default; set `GPU=on` to try it. Needs Docker Desktop with the WSL 2 engine and an up-to-date GPU driver. OpenGL goes through DirectX (Mesa d3d12). The Gazebo GUI aborts at random on it (`Out of GPU memory or driver refused`, seen on an AMD Radeon iGPU), so `sonoma.launch.py` renders only the server (sensors) on the GPU and the GUI in software. A plain `gz sim` still renders both on the GPU. |
-| Mac | no | no | Docker Desktop for Mac has no GPU passthrough; software rendering only. |
+| Host | What is used | What is needed |
+|---|---|---|
+| Windows | Any GPU through DirectX (Mesa d3d12) | Docker Desktop with the WSL 2 engine and an up-to-date GPU driver |
+| Ubuntu + NVIDIA | NVIDIA EGL | The NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) |
+| Ubuntu + AMD/Intel | Mesa EGL on `/dev/dri` | Nothing extra |
+| Mac | Software rendering | Docker Desktop for Mac has no GPU access |
 
-On Linux the desktop runs under [VirtualGL](https://virtualgl.org), so every OpenGL program (Gazebo, RViz) renders on the GPU.
+## Map
+The Sonoma world is placed at the real Sonoma Raceway, so the GPS topic
+`/sac/sensors/navsat/navsat` gives real coordinates that line up with maps (about 5 m).
 
-To check, open a terminal in the desktop and run:
-```bash
-/opt/VirtualGL/bin/glxinfo -B | grep "renderer string"
-```
-It should name your GPU (for example `NVIDIA GeForce ...`, `AMD Radeon ...` or `D3D12 (...)`), not `llvmpipe`.
+Known issue: the Map panel shows the map around the car but does not draw the car's
+position yet (a Lichtblick problem that is being looked into). The 3D view is not affected.
 
 ## Windows: computer freezes while the simulation runs
 By default the WSL 2 VM behind Docker Desktop may use every CPU core and about half of the RAM, and it keeps file cache without giving it back to Windows.
-With software rendering Gazebo can then leave Windows without CPU or memory; stopping the container does not help, only quitting Docker Desktop does.
-Limit the VM with `%UserProfile%\.wslconfig` (Sonoma needs about 3 GB; tested on 16 GB RAM, 12 threads):
+Limit it with `%UserProfile%\.wslconfig` (tested on 16 GB RAM, 12 threads):
 ```ini
 [wsl2]
 memory=6GB
@@ -103,11 +87,3 @@ swap=4GB
 autoMemoryReclaim=gradual
 ```
 Then quit Docker Desktop, run `wsl --shutdown` and start Docker Desktop again.
-With less RAM or fewer cores, lower `memory` and `processors` (keep at least 2 cores and 4 GB for Windows).
-
-## Scripts
-
-### Launch Sonoma Environment in Gazebo
-```
-cd ~/workspace/ros2_ws/ && colcon build && source install/setup.bash && ros2 launch gazebo_environment sonoma.launch.py
-```

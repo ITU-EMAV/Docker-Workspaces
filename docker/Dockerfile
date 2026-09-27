@@ -1,190 +1,42 @@
-# Ubuntu 24.04 (Noble) + ROS 2 Jazzy + Gazebo Harmonic
-FROM ubuntu:noble
+# Headless Gazebo simulation: no desktop, no VNC. Gazebo runs without a window
+# and the robot is watched in the browser through foxglove_bridge + Lichtblick.
+FROM ros:jazzy-ros-base
 
-ARG TARGETPLATFORM
-LABEL maintainer="akdalyunus <yunus.akdal@gmail.com>"
+ARG DEBIAN_FRONTEND=noninteractive
 
-SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive
-
-# ---------------------------------------------------------
-# Base system
-# ---------------------------------------------------------
-RUN apt-get update -q && \
-    apt-get upgrade -y && \
-    apt-get autoclean && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
-# Desktop
-RUN apt-get update -q && \
-    apt-get install -y ubuntu-mate-desktop && \
-    apt-get autoclean && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-# RUN apt-get update -q && \
-#     apt-get install -y \
-#         xfce4 xfce4-goodies \
-#         dbus-x11 x11-xserver-utils && \
-#     apt-get autoclean && \
-#     apt-get autoremove -y && \
-#     rm -rf /var/lib/apt/lists/*
-
-
-# Tools
+# Gazebo Harmonic (ros_gz), the Foxglove WebSocket bridge, robot description
+# tools, and Mesa for rendering the sensors (software, or GPU through d3d12/EGL).
 RUN apt-get update && \
-    apt-get install -y \
-        tigervnc-standalone-server tigervnc-common \
-        supervisor wget curl gosu git sudo python3-pip tini \
-        build-essential vim lsb-release locales \
-        bash-completion tzdata terminator dos2unix \
-        ca-certificates software-properties-common && \
-    apt-get autoclean && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
-# ---------------------------------------------------------
-# VirtualGL: renders OpenGL apps in the VNC desktop on the host GPU
-# (NVIDIA, or AMD/Intel through /dev/dri). See scripts/entrypoint.sh.
-# ---------------------------------------------------------
-ARG VIRTUALGL_VERSION=3.1.5
-RUN wget -q -O /tmp/virtualgl.deb \
-      "https://github.com/VirtualGL/virtualgl/releases/download/${VIRTUALGL_VERSION}/virtualgl_${VIRTUALGL_VERSION}_$(dpkg --print-architecture).deb" && \
-    apt-get update -q && \
-    apt-get install -y /tmp/virtualgl.deb && \
-    rm -f /tmp/virtualgl.deb && \
+    apt-get install -y --no-install-recommends \
+        ros-jazzy-ros-gz \
+        ros-jazzy-foxglove-bridge \
+        ros-jazzy-xacro \
+        ros-jazzy-robot-state-publisher \
+        ros-jazzy-tf2-ros \
+        ros-jazzy-tf2-tools \
+        libgl1-mesa-dri \
+        libegl-mesa0 \
+        gosu && \
     rm -rf /var/lib/apt/lists/*
 
 # Let `--gpus all` mount the NVIDIA OpenGL/EGL libraries, not only CUDA.
 ENV NVIDIA_DRIVER_CAPABILITIES=all
+# Threads per OpenGL context for software rendering (llvmpipe).
+ENV LP_NUM_THREADS=4
 
-# ---------------------------------------------------------
-# noVNC + Websockify
-# ---------------------------------------------------------
-# RUN git clone https://github.com/AtsushiSaito/noVNC.git -b add_clipboard_support /usr/lib/novnc && \
-#     python3 -m pip install --no-cache-dir --break-system-packages \
-#         "git+https://github.com/novnc/websockify.git@v0.10.0" && \
-#     ln -s /usr/lib/novnc/vnc.html /usr/lib/novnc/index.html
-RUN apt-get update -q && \
-    apt-get install -y websockify novnc && \
-    rm -rf /var/lib/apt/lists/*
+# The workspace sources are bind-mounted into /ws/src; build, install and log
+# live in Docker volumes so they never mix with files on the host.
+RUN mkdir -p /ws/src /ws/build /ws/install /ws/log /home/ubuntu/.gz && \
+    chown -R ubuntu:ubuntu /ws /home/ubuntu/.gz
 
-ENV NOVNC_PATH="/usr/share/novnc"
+COPY scripts/entrypoint.sh scripts/start-simulation.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/start-simulation.sh && \
+    sed -i 's/\r$//' /usr/local/bin/entrypoint.sh /usr/local/bin/start-simulation.sh && \
+    echo '[ -f /etc/simulation.env ] && . /etc/simulation.env' >> /home/ubuntu/.bashrc && \
+    echo 'source /opt/ros/jazzy/setup.bash' >> /home/ubuntu/.bashrc && \
+    echo '[ -f /ws/install/setup.bash ] && source /ws/install/setup.bash' >> /home/ubuntu/.bashrc && \
+    echo 'cd /ws' >> /home/ubuntu/.bashrc
 
-RUN sed -i "s/UI.initSetting('resize', 'off');/UI.initSetting('resize', 'remote');/g" "$NOVNC_PATH/app/ui.js"
-
-# Disable auto update and crash report
-RUN sed -i 's/Prompt=.*/Prompt=never/' /etc/update-manager/release-upgrades
-RUN sed -i 's/enabled=1/enabled=0/g' /etc/default/apport
-
-# ---------------------------------------------------------
-# Firefox (APT version)
-# ---------------------------------------------------------
-# RUN add-apt-repository ppa:mozillateam/ppa -y && \
-#     echo 'Package: *' > /etc/apt/preferences.d/mozilla-firefox && \
-#     echo 'Pin: release o=LP-PPA-mozillateam' >> /etc/apt/preferences.d/mozilla-firefox && \
-#     echo 'Pin-Priority: 1001' >> /etc/apt/preferences.d/mozilla-firefox && \
-#     apt-get update -q && \
-#     apt-get install -y firefox && \
-#     apt-get autoclean && \
-#     apt-get autoremove -y && \
-#     rm -rf /var/lib/apt/lists/*
-
-# ---------------------------------------------------------
-# VSCodium (supports ARM & AMD64)
-# ---------------------------------------------------------
-RUN wget https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/raw/master/pub.gpg \
-      -O /usr/share/keyrings/vscodium-archive-keyring.asc && \
-    echo 'deb [ signed-by=/usr/share/keyrings/vscodium-archive-keyring.asc ] https://paulcarroty.gitlab.io/vscodium-deb-rpm-repo/debs vscodium main' \
-      | tee /etc/apt/sources.list.d/vscodium.list && \
-    apt-get update -q && \
-    apt-get install -y codium && \
-    apt-get autoclean && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
-# ---------------------------------------------------------
-# ROS 2 Jazzy
-# ---------------------------------------------------------
-ENV ROS_DISTRO jazzy
-ARG INSTALL_PACKAGE=desktop
-
-RUN apt-get update -q && \
-    apt-get install -y curl && \
-    ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}') && \
-    curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb" && \
-    dpkg -i /tmp/ros2-apt-source.deb && \
-    rm -f /tmp/ros2-apt-source.deb && \
-    apt-get update -q
-
-RUN apt-get update -q && \
-    apt-get install -y \
-        ros-${ROS_DISTRO}-${INSTALL_PACKAGE} \
-        ros-dev-tools \
-        python3-argcomplete \
-        python3-colcon-common-extensions \
-        python3-rosdep \
-        python3-vcstool && \
-    rosdep init || true
-
-RUN rosdep update
-
-# ---------------------------------------------------------
-# RQt tools and Tf
-# ---------------------------------------------------------
-RUN apt-get update -q && \
-    apt-get install -y \
-        ros-${ROS_DISTRO}-rqt* \
-        ros-${ROS_DISTRO}-tf* 
-
-# ---------------------------------------------------------
-# Gazebo Harmonic via ros-gz
-# ---------------------------------------------------------
-RUN apt-get update -q && \
-    apt-get install -y ros-${ROS_DISTRO}-ros-gz
-
-# ---------------------------------------------------------
-# Foxglove bridge
-# ---------------------------------------------------------
-RUN apt-get update -q && \
-    apt-get install -y ros-${ROS_DISTRO}-foxglove-bridge
-
-# ---------------------------------------------------------
-# PyTorch (multi-arch safe)
-# ---------------------------------------------------------
-# CPU wheels exist for both ARM64 + AMD64
-RUN python3 -m pip install --no-cache-dir --break-system-packages \
-    torch torchvision torchaudio \
-    --index-url https://download.pytorch.org/whl/cpu
-
-# ---------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------
-RUN rm -f /etc/apt/apt.conf.d/docker-clean || true
-
-# Desktop programs that are useless in a container and cost CPU in the VNC session:
-# update checks (list-oem-metapackages kept a core busy for minutes after login),
-# the picom compositor, the screensaver/lock, and backup, mail, bluetooth, printer,
-# power, network and accessibility helpers.
-RUN cd /etc/xdg/autostart && rm -f \
-      update-notifier.desktop ubuntu-advantage-notification.desktop ubuntu-report-on-upgrade.desktop \
-      picom.desktop mate-screensaver.desktop mate-power-manager.desktop mate-optimus.desktop \
-      org.gnome.DejaDup.Monitor.desktop org.gnome.Evolution-alarm-notify.desktop \
-      blueman.desktop nm-applet.desktop print-applet.desktop snap-userd-autostart.desktop \
-      geoclue-demo-agent.desktop spice-vdagent.desktop orca-autostart.desktop \
-      onboard-autostart.desktop magnus-autostart.desktop && \
-    rm -f /usr/share/mate/autostart/nm-applet.desktop && \
-    printf '[org.mate.screensaver]\nidle-activation-enabled=false\nlock-enabled=false\n' \
-      > /usr/share/glib-2.0/schemas/90-container.gschema.override && \
-    glib-compile-schemas /usr/share/glib-2.0/schemas
-
-COPY ./scripts/entrypoint.sh /
-RUN chmod +x /entrypoint.sh && dos2unix /entrypoint.sh
-
-ENTRYPOINT ["/bin/bash", "-c", "/entrypoint.sh"]
-
-ENV USER ubuntu
-ENV PASSWORD ubuntu
-# Threads per OpenGL context for software rendering (llvmpipe). Gazebo opens several
-# contexts (GUI, camera, lidar) and each one would otherwise use every core.
-ENV LP_NUM_THREADS 4
+WORKDIR /ws
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["start-simulation.sh"]
