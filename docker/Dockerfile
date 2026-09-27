@@ -14,6 +14,7 @@ RUN apt-get update && \
         ros-jazzy-robot-state-publisher \
         ros-jazzy-tf2-ros \
         ros-jazzy-tf2-tools \
+        ros-jazzy-depth-image-proc \
         libgl1-mesa-dri \
         libegl-mesa0 \
         python3-pil \

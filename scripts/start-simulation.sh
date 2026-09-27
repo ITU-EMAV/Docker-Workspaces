@@ -5,6 +5,9 @@ source /opt/ros/jazzy/setup.bash
 
 cd /ws
 echo "* Building the workspace (/ws/src)"
+# --symlink-install leaves links to files that were deleted from the sources, and colcon
+# then fails with "can't copy ...: doesn't exist". Drop them before building.
+find /ws/build /ws/install -xtype l -delete 2>/dev/null || true
 colcon build --symlink-install --event-handlers console_direct- summary+
 source /ws/install/setup.bash
 
