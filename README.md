@@ -18,6 +18,14 @@ To update submodules recursively:
 git submodule update --init --recursive
 ```
 
+The workspace (`workspace/ros2_ws/src`) holds two submodules:
+- [gazebo_environment](https://github.com/ITU-EMAV/gazebo_environment): the world, the
+  simulated sensors and the bridge; only used in simulation.
+- [sac_autonomy](https://github.com/ITU-EMAV/sac_autonomy): the car's description and the
+  autonomy packages, shared with the real car's
+  [Vehicle-Workspace](https://github.com/ITU-EMAV/Vehicle-Workspace). It is private, so
+  cloning it needs access to it.
+
 ## Run
 Install Docker, then run the script for your operating system:
 - Windows: [`run.bat`](run.bat)
