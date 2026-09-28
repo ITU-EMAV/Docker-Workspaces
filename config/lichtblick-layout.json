@@ -77,6 +77,9 @@
           "colorMap": "turbo",
           "minValue": 0.0,
           "maxValue": 20.0
+        },
+        "/sac/ground_truth/marker": {
+          "visible": true
         }
       },
       "layers": {
