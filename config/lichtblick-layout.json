@@ -129,7 +129,8 @@
       "followTopic": "/sac/sensors/navsat_front_right/navsat",
       "disabledTopics": [],
       "topicColors": {
-        "/sac/planning/route_geojson": "#1e90ff"
+        "/sac/planning/route_geojson": "#1e90ff",
+        "/sac/localization/fix": "#ff8c00"
       },
       "customTileUrl": "",
       "layer": "map"
@@ -153,6 +154,30 @@
         "field": "angular-z",
         "value": -1
       }
+    },
+    "Plot!locerror": {
+      "paths": [
+        {
+          "value": "/sac/localization/error.horizontal",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "position error [m]"
+        },
+        {
+          "value": "/sac/localization/error.horizontal_stddev",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "filter sigma [m]"
+        }
+      ],
+      "minYValue": 0,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "followingViewWidth": 60
     }
   },
   "globalVariables": {},
@@ -166,7 +191,12 @@
       "first": "Image!simcam",
       "second": {
         "first": "map!simmap",
-        "second": "Teleop!simteleop",
+        "second": {
+          "first": "Teleop!simteleop",
+          "second": "Plot!locerror",
+          "direction": "column",
+          "splitPercentage": 45
+        },
         "direction": "row",
         "splitPercentage": 60
       },
