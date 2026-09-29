@@ -80,6 +80,17 @@
         },
         "/sac/ground_truth/marker": {
           "visible": true
+        },
+        "/sac/ground_truth/obstacles": {
+          "visible": true
+        },
+        "/sac/perception/grid": {
+          "visible": true,
+          "colorMode": "costmap",
+          "alpha": 0.6
+        },
+        "/sac/planning/candidates": {
+          "visible": true
         }
       },
       "layers": {
