@@ -91,6 +91,17 @@
         },
         "/sac/planning/candidates": {
           "visible": true
+        },
+        "/sac/perception/map": {
+          "visible": true,
+          "pointSize": 4,
+          "pointShape": "square",
+          "colorField": "blocks",
+          "colorMode": "colormap",
+          "colorMap": "turbo",
+          "explicitAlpha": 0.8,
+          "minValue": 0.0,
+          "maxValue": 1.0
         }
       },
       "layers": {
