@@ -5,3 +5,6 @@
 	path = workspace/ros2_ws/src/sac_autonomy
 	url = https://github.com/ITU-EMAV/sac_autonomy.git
 	branch = main
+[submodule "workspace/ros2_ws/src/external/FAST_LIO_ROS2"]
+	path = workspace/ros2_ws/src/external/FAST_LIO_ROS2
+	url = https://github.com/Ericsii/FAST_LIO_ROS2.git

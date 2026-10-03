@@ -28,6 +28,15 @@ RUN apt-get update && \
         ros-jazzy-foxglove-msgs && \
     rm -rf /var/lib/apt/lists/*
 
+# PCL for external/FAST_LIO_ROS2 (a lidar-inertial odometry, tried against our own; GPL-2.0,
+# kept apart in workspace/ros2_ws/src/external)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ros-jazzy-pcl-ros \
+        ros-jazzy-pcl-conversions \
+        libpcl-dev && \
+    rm -rf /var/lib/apt/lists/*
+
 # trimesh converts the Sonoma track model to GLB for the browser viewer
 # (gazebo_environment's track_visual node); it is not packaged for Ubuntu.
 RUN pip3 install --no-cache-dir --break-system-packages trimesh==5.1.0
